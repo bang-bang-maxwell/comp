@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Competitive Intelligence Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f8fafc;--card:#fff;--border:#e2e8f0;--border2:#f1f5f9;--text:#1e293b;--muted:#64748b;--faint:#94a3b8;--blue:#4a9eff;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--purple:#a855f7}
+body{font-family:'Inter','SF Pro Display','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:16px;max-width:1200px;margin:0 auto;line-height:1.5}
+h1{font-size:22px;font-weight:800;text-align:center}
+.sub{font-size:13px;color:var(--muted);text-align:center;margin:4px 0 20px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
+.tab{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.tab:hover{border-color:var(--blue);color:var(--text)}
+.tab.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.filter-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px}
+.filter-label{font-size:11px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--card);color:var(--faint)}
+.chip:hover{border-color:var(--blue)}
+.chip.on{border-color:var(--blue);background:#eff6ff;color:#2563eb}
+.sort-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.sort-row span{font-size:12px;font-weight:600;color:var(--faint)}
+.sort-btn{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--card);color:var(--faint)}
+.sort-btn.on{border-color:var(--blue);background:#eff6ff;color:#2563eb}
+.panel{display:none}.panel.active{display:block}
+.company-card{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden}
+.card-header{padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px}
+.card-header:hover{background:#fafbfc}
+.card-info{flex:1;min-width:0}
+.card-name{font-weight:700;font-size:15px}
+.card-name small{font-size:11px;color:var(--faint);margin-left:8px;font-weight:400}
+.card-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.card-scores{display:flex;gap:12px;align-items:center;flex-shrink:0}
+.score-item{text-align:center}
+.score-num{font-size:16px;font-weight:800}
+.score-label{font-size:9px;color:var(--faint);text-transform:uppercase}
+.arrow{font-size:14px;color:var(--faint);transition:transform .2s;flex-shrink:0}
+.arrow.open{transform:rotate(180deg)}
+.card-body{padding:0 16px 16px;border-top:1px solid var(--border2);display:none}
+.card-body.open{display:block}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.detail-section-title{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;margin-bottom:6px}
+.detail-row{font-size:13px;line-height:1.8}
+.detail-row strong{color:var(--text)}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.bar-label{font-size:12px;min-width:90px;color:var(--muted)}
+.bar-track{height:6px;background:var(--border);border-radius:3px;flex:1}
+.bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.bar-val{font-size:12px;font-weight:700;min-width:16px}
+.product-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.product-tag{font-size:11px;padding:3px 8px;border-radius:6px;background:#f1f5f9;color:#475569}
+.icp-text,.future-text{font-size:13px;color:#475569;margin-top:4px;line-height:1.5}
+.cmp-wrap{overflow-x:auto}
+.cmp-table{width:100%;border-collapse:collapse;font-size:12px;background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+.cmp-table th{padding:10px 8px;text-align:center;font-weight:600;border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);background:#f8fafc}
+.cmp-table th:first-child{text-align:left;padding-left:12px}
+.cmp-table td{padding:8px;text-align:center;border-bottom:1px solid var(--border2)}
+.cmp-table td:first-child{text-align:left;padding-left:12px;font-weight:600;white-space:nowrap}
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:700}
+.badge-s{background:#f0fdf4;color:var(--green)}.badge-m{background:#fffbeb;color:var(--amber)}.badge-w{background:#fef2f2;color:var(--red)}
+.sw-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+.sw-card h3{font-size:15px;font-weight:700;margin-bottom:10px}
+.sw-card h3 small{font-size:12px;color:var(--faint);margin-left:8px;font-weight:400}
+.sw-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.sw-title{font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:6px}
+.sw-title.g{color:var(--green)}.sw-title.r{color:var(--red)}
+.sw-item{font-size:12px;color:#475569;padding:4px 0;border-bottom:1px solid #f8fafc;line-height:1.5}
+.sent-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+.sent-card h3{font-size:15px;font-weight:700;margin-bottom:10px}
+.sent-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.sent-title{font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:6px}
+.sent-title.p{color:var(--purple)}.sent-title.b{color:var(--blue)}
+.sent-text{font-size:13px;color:#475569;line-height:1.6}
+.opp-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.opp-card h2{font-size:16px;font-weight:700;margin-bottom:12px}
+.opp-item{padding:12px 0;border-bottom:1px solid var(--border2)}
+.opp-item:last-child{border-bottom:none}
+.opp-item h4{font-weight:700;font-size:14px;margin-bottom:4px}
+.opp-item p{font-size:13px;color:var(--muted);line-height:1.6}
+.adv-box{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:16px}
+.adv-box h4{font-weight:700;font-size:14px;margin-bottom:8px;color:#92400e}
+.adv-box p{font-size:13px;color:#92400e;line-height:1.7}
+footer{text-align:center;padding:24px 0;font-size:11px;color:var(--faint)}
+@media(max-width:768px){.detail-grid,.sw-grid,.sent-grid{grid-template-columns:1fr}.card-scores{display:none}}
+</style>
+</head>
+<body>
+<h1>Competitive Intelligence Dashboard</h1>
+<p class="sub">Pickle Juice · Electrolytes · Endurance Supplements — 10 Companies Analyzed</p>
+
+<div class="tabs" id="tabs"></div>
+<div class="filter-box">
+  <div class="filter-label">Filter Companies</div>
+  <div class="chips" id="filterChips"></div>
+</div>
+
+<div class="panel active" id="p-overview">
+  <div class="sort-row"><span>Sort by:</span><div id="sortBtns"></div></div>
+  <div id="overviewList"></div>
+</div>
+<div class="panel" id="p-compare"><div class="cmp-wrap" id="compareTable"></div></div>
+<div class="panel" id="p-sw"></div>
+<div class="panel" id="p-sentiment"></div>
+<div class="panel" id="p-opportunities"></div>
+
+<footer>Data compiled from web research, company profiles, industry reports, and public sources · March 2026 · Not financial advice</footer>
+
+<script>
+const COMPANIES=[
+{id:"fastpickle",name:"Fast Pickle",url:"fastpickle.com",founded:"~2023",hq:"USA",category:"Pickle Juice Shot",estRevenue:"<$1M",estEmployees:"1-5",funding:"Bootstrapped",products:["3oz pickle juice shots (6/12/24pk)","Subscription model"],sodium:"570mg/3oz",sugar:"0g",format:"Ready-to-drink shot",price:"~$2.50-3.50/shot",icp:"Athletes ditching LMNT/additive-heavy electrolytes, pickle lovers, blue-collar workers (construction, Texas heat)",strengths:["Clean 4-ingredient formula (water, vinegar, salt, natural flavor)","Strong DTC copy and brand voice — feels premium/modern","Subscription model for recurring revenue","Compact 3oz format is genuinely portable","Customer reviews are enthusiastic and authentic","Positioned against LMNT specifically — smart wedge"],weaknesses:["Extremely early stage — likely <$500K ARR","No retail distribution (DTC only)","Single product line — no flavor variants, no powder, no bar","Zero SEO/content footprint — blog has ~4 posts","No clinical data or science claims","Brand awareness is near-zero outside existing customers"],sentiment:"Very positive among buyers (authentic reviews), but tiny sample size. Brand unknown to broader market.",futurePlans:"Likely expanding to Amazon, potentially flavor variants. Subscription focus suggests DTC-first growth strategy.",seoScore:1,llmScore:1,marketShare:1,brandAwareness:1,productDepth:1,scienceBacking:2},
+{id:"picklepower",name:"Pickle Juice Co.",url:"picklepower.com",founded:"2001",hq:"Mesquite, TX",category:"Clinical Pickle Brine",estRevenue:"$5-15M",estEmployees:"15-30",funding:"Revenue-funded",products:["2.5oz Extra Strength shots","8oz sports drink","16oz bottle","Freeze pops"],sodium:"High (varies)",sugar:"0g",format:"Shot + beverage",price:"~$2-3/shot",icp:"Endurance athletes, sports teams, athletic trainers, nocturnal cramp sufferers, Walmart/grocery shoppers",strengths:["OG of the category — founded 2001, massive first-mover advantage","USDA Organic certified, clinical studies backing cramp relief","'15x electrolytes of common sports drinks' claim","Wide retail distribution (Walmart, grocery chains, Amazon)","Multiple formats (shots, drinks, freeze pops)","Strong athletic trainer / team sports channel"],weaknesses:["Brand feels dated — website and packaging lack modern DTC energy","Domain is picklepower.com (confusing brand vs domain)","Content/SEO is thin despite 20+ years in market","Social media presence is modest for category leader","Not capturing the new wave of pickle-as-lifestyle consumers","Premium positioning is weak — looks like a commodity product"],sentiment:"Trusted by athletic trainers and endurance community. Seen as the 'original' but not the 'cool' brand. Solid 4+ star Amazon reviews.",futurePlans:"Expanding Extra Strength line, maintaining grocery distribution. Website recently refreshed. Defending position against new entrants.",seoScore:5,llmScore:4,marketShare:8,brandAwareness:6,productDepth:7,scienceBacking:9},
+{id:"drinkpickie",name:"PiCKiE",url:"drinkpickie.com",founded:"2024",hq:"Westchester, NY",category:"Flavored Pickle Beverage",estRevenue:"<$500K",estEmployees:"3-5",funding:"Bootstrapped",products:["Original Dill 8oz","Orange Citrus 8oz","Spicy 8oz","Variety Pack"],sodium:"~300mg more than leading sports drink",sugar:"Low (organic cane)",format:"8oz bottle",price:"~$3-4/bottle",icp:"Everyday consumers, hangover recovery, health-conscious millennials, pickle fans AND skeptics",strengths:["Three distinct flavors — broadens appeal beyond pickle purists","Founders: chemical engineering + tech + food/bev marketing","Small-batch, handcrafted positioning","Lifestyle brand play — cocktails, hangover recovery, not just sports","Targeting pickle skeptics with flavored variants"],weaknesses:["Brand new (2024) — near-zero market presence","No retail distribution yet","8oz format is less portable than 2-3oz shots","Contains organic cane sugar (not zero-sugar)","Zero SEO footprint, minimal content","No science/clinical backing"],sentiment:"Too early to assess at scale. Local press (Westchester Magazine) positive. Founders open about challenges.",futurePlans:"Growing via Instagram/TikTok, expanding retail, targeting NY metro area first.",seoScore:1,llmScore:1,marketShare:1,brandAwareness:1,productDepth:3,scienceBacking:1},
+{id:"bobspicklepops",name:"Bob's Pickle Pops",url:"bobspicklepops.com",founded:"~2008",hq:"San Antonio, TX",category:"Frozen Pickle Pops",estRevenue:"$1-3M",estEmployees:"5-10",funding:"Bootstrapped",products:["Original Frozen Dill Pickle Pops","Pickle Potion #9 (liquid shot)","Picklebacks (cocktail mixer)"],sodium:"Moderate",sugar:"0g added",format:"Frozen pop + liquid",price:"~$4-5/6pk",icp:"Kids, families, Texas/Southern market, pickle enthusiasts, cyclists, novelty snack buyers",strengths:["In Walmart and H-E-B — proven retail traction","Sold 7M+ units/year at peak","Unique frozen format differentiates from all competitors","Fun, approachable brand (kids + adults)","Strong regional loyalty (Texas)"],weaknesses:["Contains artificial colors (FD&C Yellow #5) and preservatives","WooCommerce site — not optimized for DTC","Frozen pops have seasonal/logistic constraints","Brand feels regional, not national","Ingredient list contradicts 'natural' trend"],sentiment:"Loyal Texas following. Amazon reviews mixed. More novelty than performance product.",futurePlans:"Pickle Potion #9 liquid shot is the growth play. Expanding beyond frozen into liquid/RTD.",seoScore:2,llmScore:2,marketShare:3,brandAwareness:4,productDepth:4,scienceBacking:1},
+{id:"fixxnutrition",name:"Fixx Nutrition",url:"fixxnutrition.com",founded:"~2015",hq:"Australia",category:"Cramp Fix + Sports Fuel",estRevenue:"$2-5M",estEmployees:"10-20",funding:"Self-funded",products:["CrampFix (rapid cramp relief shot)","Fuel X (electrolyte drink)","CrampFix Gel"],sodium:"Varies",sugar:"Low/zero",format:"Shots, gels, drink mix",price:"~$3-4/shot",icp:"Endurance athletes (triathlon, cycling, running), Australian/APAC market, expanding to US",strengths:["CrampFix is differentiated — rapid-acting cramp relief","Australian-made with 'gut-friendly' positioning","Multiple product categories (cramp fix + fuel + gel)","Strong in APAC/Australian endurance community"],weaknesses:["US market presence is weak — brand barely known domestically","Limited US retail or Amazon presence","Competing against HOTSHOT on same nerve-based mechanism","SEO is thin for US keywords","Brand name 'Fixx' doesn't communicate product benefit"],sentiment:"Well-regarded in Australian endurance circles. US consumers largely unaware.",futurePlans:"Expanding US distribution (en-us site live). CrampFix is wedge product for US entry.",seoScore:3,llmScore:2,marketShare:2,brandAwareness:2,productDepth:5,scienceBacking:5},
+{id:"saltstick",name:"SaltStick",url:"saltstick.com",founded:"2006",hq:"Malibu, CA",category:"Electrolyte Capsules & Chews",estRevenue:"~$13M",estEmployees:"7-15",funding:"PE-backed (American Pacific Group, 2020)",products:["SaltStick Caps","Caps Plus (caffeine)","FastChews","DrinkMix","Vitassium (medical POTS)","Race Ready line","Dispensers"],sodium:"215mg/cap",sugar:"0g (caps)",format:"Capsules, chews, powder",price:"~$0.30-0.50/cap",icp:"Triathletes, ultra runners, cyclists, POTS/dysautonomia patients, endurance athletes broadly",strengths:["Category leader (~22% electrolyte capsule market share)","PE-backed = capital for growth","Founder: PhD organic chemistry + elite triathlete","Formulated to match sweat electrolyte profile","Clinical study on FastChews replenishment","Vitassium opens medical/POTS market","NSF Certified for Sport","Henry Schein Medical distribution"],weaknesses:["Brand awareness limited outside endurance","PE ownership may prioritize margins over innovation","Capsule format less appealing to casual fitness","Social media engagement is moderate","Website/brand is functional not aspirational"],sentiment:"Gold standard in endurance. 'If you do Ironman, you know SaltStick.' Vitassium has devoted medical following. Amazon 4.5+ stars.",futurePlans:"Race Ready premium line. DrinkMix for hydration market. Medical channel expansion via Henry Schein.",seoScore:7,llmScore:6,marketShare:9,brandAwareness:7,productDepth:10,scienceBacking:9},
+{id:"firstendurance",name:"First Endurance",url:"firstendurance.com",founded:"2002",hq:"American Fork, UT",category:"Endurance Sports Nutrition",estRevenue:"~$5M",estEmployees:"28",funding:"Revenue-funded",products:["EFS electrolyte drink","EFS-PRO","Optygen/Optygen HP","MultiV","Pre Race","Liquid Shot","Ultragen recovery"],sodium:"Varies",sugar:"Varies",format:"Powder, capsules, drinks",price:"~$30-50/product",icp:"Serious endurance athletes (cyclists, triathletes, ultra runners), Wasatch/SLC trail community",strengths:["22+ years, strong endurance brand equity","Based in SLC/Wasatch — authentic credibility","Optygen is a legendary supplement — cult following","'Integrated fueling system' positioning is unique","Chief Scientific Officer on staff (PhD)","Pro athlete roster (Phil Gaimon, gravel/Ironman)"],weaknesses:["Revenue appears flat (~$5M)","Brand feels niche/insider","Product line complexity may confuse new customers","Limited mainstream retail","Competitors (Maurten, Skratch) getting more buzz"],sentiment:"Deeply respected in cycling and triathlon. 'If you know, you know.' Fiercely loyal user base.",futurePlans:"Product reformulation with latest science. YouTube content. Defending niche rather than expanding mainstream.",seoScore:5,llmScore:4,marketShare:4,brandAwareness:5,productDepth:9,scienceBacking:9},
+{id:"teamhotshot",name:"HOTSHOT",url:"teamhotshot.com",founded:"~2016",hq:"USA",category:"Anti-Cramp Neuro Shot",estRevenue:"$3-8M",estEmployees:"10-20",funding:"VC-backed (originally Flex Pharma)",products:["HOTSHOT for Muscle Cramps (1.7oz)","HOTSHOT for Soreness","Subscriptions"],sodium:"40mg (NOT an electrolyte play)",sugar:"6g",format:"1.7oz spicy shot",price:"~$5-6/shot",icp:"Pro athletes (NWSL, NFL, NBA), endurance athletes, nocturnal cramp sufferers",strengths:["Nobel Prize-winning neuroscientist co-founder","Unique mechanism: targets nerve, not muscle","NSF Certified for Sport","Viral NWSL videos drove massive brand awareness","Used by pro sports teams across NFL, NBA, MLS","Clinically proven in studies"],weaknesses:["Very expensive ($5-6/shot)","Tastes deliberately awful — confirmed barrier","Original parent (Flex Pharma) went bankrupt","Only 40mg sodium — NOT an electrolyte replacement","Some scientific skepticism about claims","Essentially one product in two variants"],sentiment:"Polarizing. Athletes who use it swear by it. Taste universally acknowledged as terrible. Viral soccer videos are double-edged sword.",futurePlans:"Pushing muscle soreness/recovery positioning. Subscription growth. Leveraging pro sports relationships.",seoScore:5,llmScore:5,marketShare:4,brandAwareness:7,productDepth:2,scienceBacking:8},
+{id:"suckerpunch",name:"SuckerPunch Pickles",url:"suckerpunchpickles.com",founded:"2011",hq:"Bridgeview, IL",category:"Pickle Brand (Full Line)",estRevenue:"$15-25M",estEmployees:"18+",funding:"$5.82M raised (DOM Capital Group)",products:["Pickle jars (multiple flavors)","Pickle pouch snack packs","Pickle juice electrolyte shots (2oz)","Bloody Mary / Margarita mixers"],sodium:"Varies",sugar:"0g (shots)",format:"Jars, pouches, shots, mixers",price:"~$2-3/shot, ~$6-8/jar",icp:"Premium pickle snackers, athletes (NIL college deals), health-conscious consumers, cocktail enthusiasts",strengths:["500% revenue growth under CEO (ex-Conagra)","14,000+ retail stores nationwide","VC-backed with $5.82M raised","Diverse product portfolio","College athlete NIL deals for sports positioning","Strongest retail distribution of any pickle brand here"],weaknesses:["Pickle shots are a sub-product, not core business","Brand dilution risk — snack company + sports hydration","Electrolyte shot not differentiated from competitors","DTC presence secondary to retail","May struggle to be taken seriously as 'sports brand'"],sentiment:"Strong in grocery/retail. Athletes appreciate NIL partnerships. Perceived as 'pickle company that also does shots.'",futurePlans:"Aggressive retail expansion. NIL college sports deals. Pushing pickle juice shots as growth category.",seoScore:5,llmScore:3,marketShare:6,brandAwareness:6,productDepth:8,scienceBacking:2},
+{id:"therightstuff",name:"The Right Stuff",url:"therightstuff-usa.com",founded:"~2010",hq:"Boulder, CO",category:"NASA Electrolyte Concentrate",estRevenue:"$2-5M",estEmployees:"5-10",funding:"Wellness Brands LLC",products:["Electrolyte drink additive pouches","Nutrition/Hydration bars"],sodium:"High (sodium citrate)",sugar:"0g",format:"Liquid concentrate pouches",price:"~$3-4/pouch",icp:"Pro sports teams (NFL, NBA, NHL, MLB, MLS), military, first responders, altitude athletes",strengths:["NASA-developed formula — ultimate credibility","Used by most major pro leagues","Sodium citrate GI buffer is differentiated","NSF Certified for Sport","20%+ endurance increase in NASA testing","New hydration bars expand product line"],weaknesses:["Brand invisible to consumers — almost entirely B2B","Website feels dated, e-commerce is clunky","'Salty taste' acknowledged as barrier","Contains sucralose in some flavors","Social media tiny (~3K Facebook likes)","No DTC marketing engine"],sentiment:"Deeply respected in pro sports/military. General consumers have no idea it exists. Loyal once discovered.",futurePlans:"Endurance Zone partnership. Hydration bars are new push. Likely staying B2B/institutional.",seoScore:3,llmScore:3,marketShare:5,brandAwareness:3,productDepth:4,scienceBacking:10}
+];
+
+const METRICS=[
+{key:"marketShare",label:"Market Share"},{key:"brandAwareness",label:"Brand Awareness"},{key:"productDepth",label:"Product Depth"},{key:"scienceBacking",label:"Science Backing"},{key:"seoScore",label:"SEO Strength"},{key:"llmScore",label:"LLM/AI Visibility"}
+];
+
+const VIEWS=["Overview","Compare","Strengths & Weaknesses","Sentiment & ICP","Opportunities"];
+let currentView="Overview",selectedIds=COMPANIES.map(c=>c.id),sortBy="marketShare",openCard=null;
+
+function tier(v){return v>=8?{l:"Strong",c:"#22c55e",bg:"#f0fdf4"}:v>=5?{l:"Mod",c:"#f59e0b",bg:"#fffbeb"}:{l:"Weak",c:"#ef4444",bg:"#fef2f2"}}
+function filtered(){return COMPANIES.filter(c=>selectedIds.includes(c.id)).sort((a,b)=>(b[sortBy]||0)-(a[sortBy]||0))}
+
+function renderTabs(){
+  document.getElementById("tabs").innerHTML=VIEWS.map(v=>`<button class="tab${currentView===v?" on":""}" onclick="setView('${v}')">${v}</button>`).join("");
+}
+
+function renderFilters(){
+  document.getElementById("filterChips").innerHTML=COMPANIES.map(c=>`<button class="chip${selectedIds.includes(c.id)?" on":""}" onclick="toggleCompany('${c.id}')">${c.name}</button>`).join("")+`<button class="chip" style="background:#f1f5f9" onclick="toggleAll()">${selectedIds.length===COMPANIES.length?"Clear All":"Select All"}</button>`;
+}
+
+function renderSortBtns(){
+  document.getElementById("sortBtns").innerHTML=METRICS.map(m=>`<button class="sort-btn${sortBy===m.key?" on":""}" onclick="setSort('${m.key}')">${m.label}</button>`).join("");
+}
+
+function renderOverview(){
+  const list=document.getElementById("overviewList");
+  list.innerHTML=filtered().map(c=>{
+    const isOpen=openCard===c.id;
+    const scores=METRICS.slice(0,3).map(m=>{const t=tier(c[m.key]);return`<div class="score-item"><div class="score-num" style="color:${t.c}">${c[m.key]}</div><div class="score-label">${m.label.split(" ")[0]}</div></div>`}).join("");
+    const bars=METRICS.map(m=>{const t=tier(c[m.key]);return`<div class="bar-row"><span class="bar-label">${m.label}</span><div class="bar-track"><div class="bar-fill" style="width:${c[m.key]*10}%;background:${t.c}"></div></div><span class="bar-val" style="color:${t.c}">${c[m.key]}</span></div>`}).join("");
+    const prods=c.products.map(p=>`<span class="product-tag">${p}</span>`).join("");
+    return`<div class="company-card">
+<div class="card-header" onclick="toggleCard('${c.id}')">
+<div class="card-info"><div class="card-name">${c.name}<small>${c.url}</small></div><div class="card-meta">${c.category} · Est. ${c.estRevenue} · ${c.estEmployees} emp · Founded ${c.founded}</div></div>
+<div class="card-scores">${scores}</div>
+<span class="arrow${isOpen?" open":""}">▼</span>
+</div>
+<div class="card-body${isOpen?" open":""}">
+<div class="detail-grid">
+<div><div class="detail-section-title">Company Details</div><div class="detail-row"><strong>HQ:</strong> ${c.hq}<br><strong>Funding:</strong> ${c.funding}<br><strong>Format:</strong> ${c.format}<br><strong>Sodium:</strong> ${c.sodium}<br><strong>Sugar:</strong> ${c.sugar}<br><strong>Price:</strong> ${c.price}</div></div>
+<div><div class="detail-section-title">Scores</div>${bars}</div>
+</div>
+<div style="margin-top:12px"><div class="detail-section-title">Products</div><div class="product-tags">${prods}</div></div>
+<div style="margin-top:12px"><div class="detail-section-title">Target ICP</div><div class="icp-text">${c.icp}</div></div>
+<div style="margin-top:12px"><div class="detail-section-title">Future Plans / Intel</div><div class="future-text">${c.futurePlans}</div></div>
+</div></div>`;
+  }).join("");
+}
+
+function renderCompare(){
+  const f=filtered();
+  const hdr=METRICS.map(m=>`<th>${m.label}</th>`).join("");
+  const rows=f.map(c=>{
+    const cells=METRICS.map(m=>{const t=tier(c[m.key]);const cls=t.c==="#22c55e"?"badge-s":t.c==="#f59e0b"?"badge-m":"badge-w";return`<td><span class="badge ${cls}">${c[m.key]}/10</span></td>`}).join("");
+    return`<tr><td>${c.name}</td>${cells}<td style="font-weight:600">${c.estRevenue}</td><td style="color:#64748b">${c.founded}</td></tr>`;
+  }).join("");
+  document.getElementById("compareTable").innerHTML=`<table class="cmp-table"><thead><tr><th>Company</th>${hdr}<th>Revenue</th><th>Founded</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderSW(){
+  const el=document.getElementById("p-sw");
+  el.innerHTML=filtered().map(c=>{
+    const s=c.strengths.map(x=>`<div class="sw-item">✓ ${x}</div>`).join("");
+    const w=c.weaknesses.map(x=>`<div class="sw-item">⚠ ${x}</div>`).join("");
+    return`<div class="sw-card"><h3>${c.name}<small>${c.category}</small></h3><div class="sw-grid"><div><div class="sw-title g">Strengths</div>${s}</div><div><div class="sw-title r">Weaknesses</div>${w}</div></div></div>`;
+  }).join("");
+}
+
+function renderSentiment(){
+  const el=document.getElementById("p-sentiment");
+  el.innerHTML=filtered().map(c=>`<div class="sent-card"><h3>${c.name}</h3><div class="sent-grid"><div><div class="sent-title p">Market Sentiment</div><div class="sent-text">${c.sentiment}</div></div><div><div class="sent-title b">Target ICP</div><div class="sent-text">${c.icp}</div></div></div></div>`).join("");
+}
+
+function renderOpportunities(){
+  const opps=[
+    {t:"No one owns 'clean-label pickle electrolyte for endurance'",d:"Pickle Juice Co has science but dated brand. Fast Pickle has clean brand but no science. SaltStick has science but no pickle. The intersection is wide open: a clean-ingredient, clinically-backed, pickle-based electrolyte for ultra/endurance athletes. Nobody occupies this exact position."},
+    {t:"SEO/AEO is pathetically weak across the entire category",d:"Not a single company has meaningful organic search dominance for 'pickle juice for cramps', 'pickle electrolytes', or 'best electrolyte for endurance.' A new entrant with 20 well-optimized articles could rank for every valuable keyword in 6 months."},
+    {t:"No one is building for LLM citation / AI search",d:"When someone asks ChatGPT 'what's the best pickle juice for athletes,' none of these brands have structured content for AI citation. Entity moats, FAQ schema, and third-party mentions are the playbook. First mover advantage is massive."},
+    {t:"The 'endurance athlete pickle shot' is a white space",d:"HOTSHOT targets nerves (not electrolytes). SaltStick targets electrolytes (capsules, not pickle). Pickle Juice Co targets cramps (but brand is old). Nobody makes a premium, portable pickle shot specifically for trail/ultra runners with altitude-specific formulation."},
+    {t:"Subscription + community is unowned",d:"LMNT proved you can build a $200M+ brand on electrolytes + DTC + community. None of these pickle brands have built a real community. The pickle juice category is where LMNT was 5 years ago."},
+    {t:"Altitude-specific electrolyte is a niche nobody owns",d:"SLC, Denver, mountain athletes — altitude dehydration is real. The Right Stuff mentions altitude but doesn't own it. A brand built for 'mountain electrolytes' would be highly differentiated."},
+    {t:"Natural / ancestral positioning is underexploited",d:"Pickle brine is the oldest electrolyte solution in human history. Nobody tells that story well. The ancestral health / carnivore community would embrace a clean pickle electrolyte with the right messaging."}
+  ];
+  document.getElementById("p-opportunities").innerHTML=`
+<div class="opp-card"><h2>Market Gaps & Competitive Opportunities</h2>${opps.map(o=>`<div class="opp-item"><h4>💡 ${o.t}</h4><p>${o.d}</p></div>`).join("")}</div>
+<div class="adv-box"><h4>⚡ If You're Entering This Market, Your Unfair Advantages Are:</h4><p>
+1. <strong>AEO/GEO expertise</strong> — you can build the SEO and AI citation moat nobody in this space has<br>
+2. <strong>Endurance athlete credibility</strong> — Wasatch, WURL, trail running gives you authentic founder story<br>
+3. <strong>SLC/altitude angle</strong> — geographic differentiation that resonates with mountain athletes<br>
+4. <strong>Clean-label + ancestral positioning</strong> — aligns with your personal nutrition philosophy<br>
+5. <strong>DTC + subscription playbook</strong> — you already know HubSpot, nurture flows, and conversion optimization<br>
+6. <strong>The category is fragmented and sleepy</strong> — no dominant brand with both great product AND great marketing
+</p></div>`;
+}
+
+function renderAll(){
+  renderTabs();renderFilters();renderSortBtns();
+  renderOverview();renderCompare();renderSW();renderSentiment();renderOpportunities();
+}
+
+window.setView=function(v){
+  currentView=v;openCard=null;
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  const map={"Overview":"p-overview","Compare":"p-compare","Strengths & Weaknesses":"p-sw","Sentiment & ICP":"p-sentiment","Opportunities":"p-opportunities"};
+  document.getElementById(map[v]).classList.add("active");
+  renderTabs();
+};
+window.toggleCompany=function(id){if(selectedIds.includes(id))selectedIds=selectedIds.filter(x=>x!==id);else selectedIds.push(id);openCard=null;renderAll();};
+window.toggleAll=function(){selectedIds=selectedIds.length===COMPANIES.length?[]:COMPANIES.map(c=>c.id);openCard=null;renderAll();};
+window.setSort=function(key){sortBy=key;renderSortBtns();renderOverview()};
+window.toggleCard=function(id){openCard=openCard===id?null:id;renderOverview()};
+
+renderAll();
+</script>
+</body>
+</html>
